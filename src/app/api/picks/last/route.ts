@@ -17,6 +17,29 @@ type DraftPickWithPlayer = {
   };
 };
 
+async function getIsDraftBoardLocked() {
+  const draftState = await prisma.draftState.findUnique({
+    where: {
+      id: "main",
+    },
+  });
+
+  return Boolean(draftState?.isLocked);
+}
+
+async function rejectIfDraftBoardLocked() {
+  const isLocked = await getIsDraftBoardLocked();
+
+  if (!isLocked) {
+    return null;
+  }
+
+  return NextResponse.json(
+    { message: "The draft board is locked." },
+    { status: 423 },
+  );
+}
+
 function toDraftPick(row: DraftPickWithPlayer): DraftPick {
   return {
     pickNumber: row.pickNumber,
@@ -48,6 +71,12 @@ async function getAllDraftPicks() {
 }
 
 export async function DELETE() {
+  const lockedResponse = await rejectIfDraftBoardLocked();
+
+  if (lockedResponse) {
+    return lockedResponse;
+  }
+
   const lastPick = await prisma.draftPick.findFirst({
     orderBy: {
       pickNumber: "desc",

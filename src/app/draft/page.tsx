@@ -43,11 +43,15 @@ type DraftOrderApiResponse = {
   message?: string;
 };
 
+type DraftStateApiResponse = {
+  isLocked?: boolean;
+  message?: string;
+};
+
 const DRAFT_BACKUP_HISTORY_KEY = "draftPicksBackupHistory";
 const DRAFT_LATEST_BACKUP_KEY = "draftPicksLatestBackup";
 const MAX_DRAFT_BACKUPS = 50;
 const COMMISSIONER_UNLOCK_PASSWORD = "sproles43";
-const BOARD_LOCK_STORAGE_KEY = "draftBoardLocked";
 
 function getDraftBackupHistory() {
   if (typeof window === "undefined") {
@@ -499,8 +503,8 @@ export default function DraftPage() {
     : null;
 
   const recentPickPlayer = recentPickGraphic?.player as
-  | DraftedPlayerWithHeadshot
-  | undefined;  
+    | DraftedPlayerWithHeadshot
+    | undefined;
 
   const canEditDraftOrder = Boolean(user?.isCommissioner && picks.length === 0);
 
@@ -607,8 +611,6 @@ export default function DraftPage() {
     const savedAnnouncePicks =
       window.localStorage.getItem("announcePicks") === "true";
     const savedTheme = window.localStorage.getItem("draftTheme") ?? "dark";
-    const savedBoardLock =
-      window.localStorage.getItem(BOARD_LOCK_STORAGE_KEY) === "true";
 
     if (!savedUser) {
       router.push("/");
@@ -617,11 +619,11 @@ export default function DraftPage() {
 
     setUser(JSON.parse(savedUser));
     loadDraftOrder();
+    loadDraftState();
     loadSharedPicks();
     setAnnouncePicks(savedAnnouncePicks);
     setIsLightMode(savedTheme === "light");
     setLatestBackup(getLatestDraftBackup());
-    setIsBoardLocked(savedBoardLock);
     setIsCheckingLogin(false);
   }, [router]);
 
@@ -632,6 +634,7 @@ export default function DraftPage() {
 
     const intervalId = window.setInterval(() => {
       loadSharedPicks({ quiet: true });
+      loadDraftState({ quiet: true });
 
       if (picks.length === 0 && !isEditingDraftOrderRef.current) {
         loadDraftOrder({ quiet: true });
@@ -829,6 +832,39 @@ export default function DraftPage() {
     }
 
     return data;
+  }
+
+  async function readDraftStateResponse(response: Response) {
+    const data = (await response
+      .json()
+      .catch(() => ({}))) as DraftStateApiResponse;
+
+    if (!response.ok) {
+      throw new Error(data.message ?? "Draft state update failed.");
+    }
+
+    return data;
+  }
+
+  async function loadDraftState({ quiet = false } = {}) {
+    try {
+      const response = await fetch("/api/draft-state", {
+        cache: "no-store",
+      });
+      const data = await readDraftStateResponse(response);
+
+      setIsBoardLocked(Boolean(data.isLocked));
+    } catch (error) {
+      console.error(error);
+
+      if (!quiet) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Could not load shared draft state.",
+        );
+      }
+    }
   }
 
   async function loadDraftOrder({ quiet = false } = {}) {
@@ -1068,36 +1104,61 @@ export default function DraftPage() {
     window.localStorage.setItem("draftTheme", updatedValue ? "light" : "dark");
   }
 
-  function handleToggleBoardLock() {
+  async function handleToggleBoardLock() {
     if (!user?.isCommissioner) {
       return;
     }
 
-    if (!isBoardLocked) {
+    const nextLockedValue = !isBoardLocked;
+    let unlockPassword: string | undefined;
+
+    if (nextLockedValue) {
       const confirmed = window.confirm(
-        "Lock the draft board? This will prevent picks, edits, undo, reset, and restore until it is unlocked.",
+        "Lock the draft board for everyone? This will prevent picks, edits, undo, reset, and restore until it is unlocked.",
       );
 
       if (!confirmed) {
         return;
       }
+    } else {
+      const password = window.prompt("Enter commissioner unlock password:");
 
-      setIsBoardLocked(true);
-      window.localStorage.setItem(BOARD_LOCK_STORAGE_KEY, "true");
+      if (password !== COMMISSIONER_UNLOCK_PASSWORD) {
+        setError("Incorrect unlock password.");
+        return;
+      }
+
+      unlockPassword = password;
+    }
+
+    try {
+      setIsSyncingPicks(true);
+
+      const response = await fetch("/api/draft-state", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          isLocked: nextLockedValue,
+          unlockPassword,
+        }),
+      });
+      const data = await readDraftStateResponse(response);
+
+      setIsBoardLocked(Boolean(data.isLocked));
       setError("");
-      return;
+    } catch (error) {
+      console.error(error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not update the shared draft lock.",
+      );
+      await loadDraftState({ quiet: true });
+    } finally {
+      setIsSyncingPicks(false);
     }
-
-    const password = window.prompt("Enter commissioner unlock password:");
-
-    if (password !== COMMISSIONER_UNLOCK_PASSWORD) {
-      setError("Incorrect unlock password.");
-      return;
-    }
-
-    setIsBoardLocked(false);
-    window.localStorage.setItem(BOARD_LOCK_STORAGE_KEY, "false");
-    setError("");
   }
 
   function announcePick(pick: DraftPick) {
@@ -1655,12 +1716,12 @@ export default function DraftPage() {
                     }`}
                   >
                     {recentPickPlayer?.headshot ? (
-  <img
-    src={recentPickPlayer.headshot}
-    alt={recentPickGraphic.player.name}
-    className="h-full w-full object-cover"
-  />
-) : (
+                      <img
+                        src={recentPickPlayer.headshot}
+                        alt={recentPickGraphic.player.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
                       <span className="text-xl font-black text-slate-500">
                         {recentPickGraphic.player.position}
                       </span>
