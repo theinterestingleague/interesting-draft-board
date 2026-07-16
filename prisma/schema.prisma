@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Player {
+  id        String      @id
+  name      String
+  position  String
+  nflTeam   String
+  headshot  String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  picks     DraftPick[]
+}
+
+model DraftPick {
+  id           String   @id @default(cuid())
+  pickNumber   Int      @unique
+  teamId       String
+  playerId     String
+  note         String?
+  madeByTeamId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+model DraftState {
+  id        String   @id @default("main")
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DraftOrder {
+  id          String   @id @default("main")
+  teamIdsJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
