@@ -15,7 +15,9 @@ export function getOrderedTeams(draftOrderTeamIds?: string[]) {
     return defaultTeams;
   }
 
-  const teamsById = new Map(teams.map((team) => [team.id, team]));
+  const teamsById = new Map<string, (typeof teams)[number]>(
+  teams.map((team) => [team.id, team]),
+);
   const uniqueTeamIds = new Set(draftOrderTeamIds);
 
   if (uniqueTeamIds.size !== teams.length) {

@@ -32,7 +32,7 @@ function validateTeamIds(teamIds: unknown) {
     return false;
   }
 
-  const allowedTeamIds = new Set(defaultTeamIds);
+  const allowedTeamIds = new Set<string>(teams.map((team) => team.id));
   const uniqueTeamIds = new Set(teamIds);
 
   if (uniqueTeamIds.size !== teams.length) {

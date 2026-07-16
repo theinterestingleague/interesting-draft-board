@@ -48,7 +48,7 @@ function parseTeamIdsJson(teamIdsJson?: string | null) {
     const teamIds = parsed.filter(
       (teamId): teamId is string => typeof teamId === "string",
     );
-    const allowedTeamIds = new Set(defaultTeamIds);
+    const allowedTeamIds = new Set<string>(defaultTeamIds);
     const uniqueTeamIds = new Set(teamIds);
 
     if (

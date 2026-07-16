@@ -20,6 +20,10 @@ type PlayerSearchResult = DraftedPlayer & {
   headshot?: string | null;
 };
 
+type DraftedPlayerWithHeadshot = DraftedPlayer & {
+  headshot?: string | null;
+};
+
 type DraftPickBackup = {
   id: string;
   createdAt: string;
@@ -493,6 +497,10 @@ export default function DraftPage() {
   const recentPickSplitName = recentPickGraphic
     ? splitPlayerName(recentPickGraphic.player.name)
     : null;
+
+  const recentPickPlayer = recentPickGraphic?.player as
+  | DraftedPlayerWithHeadshot
+  | undefined;  
 
   const canEditDraftOrder = Boolean(user?.isCommissioner && picks.length === 0);
 
@@ -1646,13 +1654,13 @@ export default function DraftPage() {
                         : "border-yellow-300 bg-slate-950/80 shadow-[0_0_18px_rgba(253,224,71,0.35)]"
                     }`}
                   >
-                    {recentPickGraphic.player.headshot ? (
-                      <img
-                        src={recentPickGraphic.player.headshot}
-                        alt={recentPickGraphic.player.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
+                    {recentPickPlayer?.headshot ? (
+  <img
+    src={recentPickPlayer.headshot}
+    alt={recentPickGraphic.player.name}
+    className="h-full w-full object-cover"
+  />
+) : (
                       <span className="text-xl font-black text-slate-500">
                         {recentPickGraphic.player.position}
                       </span>
