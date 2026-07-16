@@ -38,7 +38,7 @@ export default function LoginPage() {
           </h1>
 
           <p className="mt-3 text-slate-300">
-            Private draft room · No ADP · No rankings · No timer
+            Custom Draft Room
           </p>
         </div>
 
@@ -85,25 +85,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-5 grid gap-3 text-sm text-slate-400 md:grid-cols-2">
-          <Link
-            href="/display"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06]"
-          >
-            <p className="font-black text-white">TV Display Mode</p>
-            <p className="mt-1 text-xs leading-relaxed">
-              Read-only board for the apartment TV.
-            </p>
-          </Link>
-
-          <Link
-            href="/my-team"
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06]"
-          >
-            <p className="font-black text-white">My Team</p>
-            <p className="mt-1 text-xs leading-relaxed">
-              View roster-style team pages.
-            </p>
-          </Link>
+          
         </div>
       </section>
     </main>
