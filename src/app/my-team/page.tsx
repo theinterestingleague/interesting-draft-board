@@ -310,6 +310,11 @@ export default function MyTeamPage() {
                                 src={player.headshot}
                                 alt={player.name}
                                 className="h-full w-full object-cover"
+                                onError={(event) => {
+                                  event.currentTarget.src = "/player-placeholder.png";
+                                  event.currentTarget.className =
+                                    "h-full w-full object-cover opacity-70";
+                                }}
                               />
                             ) : (
                               <img
