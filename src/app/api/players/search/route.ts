@@ -58,11 +58,12 @@ export async function GET(request: NextRequest) {
           }
         : undefined,
       name:
-        query.length >= 2
-          ? {
-              contains: query,
-            }
-          : undefined,
+  query.length >= 2
+    ? {
+        contains: query,
+        mode: "insensitive",
+      }
+    : undefined,
     },
     orderBy: [
       {
