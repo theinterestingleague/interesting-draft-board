@@ -1645,19 +1645,16 @@ export default function DraftPage() {
                   <div
                     className={`relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border ${isLightMode ? "border-slate-300 bg-slate-100" : "border-white/10 bg-white/5"}`}
                   >
-                    {selectedPlayer.headshot ? (
-                      <img
-                        src={selectedPlayer.headshot}
-                        alt={selectedPlayer.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <img
-  src="/player-placeholder.png"
+                    <img
+  src={selectedPlayer.headshot || "/player-placeholder.png"}
   alt=""
   className="h-full w-full object-cover opacity-70"
+  onError={(event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = "/player-placeholder.png";
+    event.currentTarget.alt = "";
+  }}
 />
-                    )}
 
                     {getEspnTeamLogoUrl(selectedPlayer.nflTeam) && (
                       <img
@@ -1717,19 +1714,16 @@ export default function DraftPage() {
                         : "border-yellow-300 bg-slate-950/80 shadow-[0_0_18px_rgba(253,224,71,0.35)]"
                     }`}
                   >
-                    {recentPickPlayer?.headshot ? (
-                      <img
-                        src={recentPickPlayer.headshot}
-                        alt={recentPickGraphic.player.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <img
-  src="/player-placeholder.png"
+                    <img
+  src={recentPickPlayer?.headshot || "/player-placeholder.png"}
   alt=""
   className="h-full w-full object-cover opacity-70"
+  onError={(event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = "/player-placeholder.png";
+    event.currentTarget.alt = "";
+  }}
 />
-                    )}
 
                     {getEspnTeamLogoUrl(recentPickGraphic.player.nflTeam) && (
                       <img
