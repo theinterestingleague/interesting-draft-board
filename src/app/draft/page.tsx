@@ -2250,10 +2250,11 @@ export default function DraftPage() {
           </div>
         </header>
 
-        <div className={`overflow-hidden rounded-2xl border ${theme.board}`}>
-          <div
-            className={`grid grid-cols-[46px_repeat(10,minmax(108px,1fr))_46px] border-b ${theme.boardHeader}`}
-          >
+        <div className={`overflow-x-auto overflow-y-hidden rounded-2xl border ${theme.board}`}>
+  <div className="min-w-[1240px]">
+    <div
+      className={`grid grid-cols-[46px_repeat(10,minmax(108px,1fr))_46px] border-b ${theme.boardHeader}`}
+    >
             <div
               className={`px-1 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500`}
             >
@@ -2420,9 +2421,10 @@ export default function DraftPage() {
             >
               Rd
             </div>
-          </div>
-        </div>
-      </section>
+              </div>
+  </div>
+</div>
+</section>
     </main>
   );
 }
