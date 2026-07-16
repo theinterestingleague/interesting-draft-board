@@ -312,9 +312,11 @@ export default function MyTeamPage() {
                                 className="h-full w-full object-cover"
                               />
                             ) : (
-                              <span className="text-sm font-black text-slate-500">
-                                {player.position}
-                              </span>
+                              <img
+                                src="/player-placeholder.png"
+                                alt=""
+                                className="h-full w-full object-cover opacity-70"
+                              />
                             )}
                           </div>
 

@@ -1652,9 +1652,11 @@ export default function DraftPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="text-xl font-black text-slate-500">
-                        {selectedPlayer.position}
-                      </span>
+                      <img
+  src="/player-placeholder.png"
+  alt=""
+  className="h-full w-full object-cover opacity-70"
+/>
                     )}
 
                     {getEspnTeamLogoUrl(selectedPlayer.nflTeam) && (
@@ -1722,9 +1724,11 @@ export default function DraftPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="text-xl font-black text-slate-500">
-                        {recentPickGraphic.player.position}
-                      </span>
+                      <img
+  src="/player-placeholder.png"
+  alt=""
+  className="h-full w-full object-cover opacity-70"
+/>
                     )}
 
                     {getEspnTeamLogoUrl(recentPickGraphic.player.nflTeam) && (
