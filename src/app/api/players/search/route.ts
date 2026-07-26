@@ -13,6 +13,22 @@ function normalizePlayerKey(player: {
     .toLowerCase()}|${player.nflTeam.trim().toLowerCase()}`;
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function getSearchParts(query: string) {
+  return query
+    .trim()
+    .split(/[\s.'’`-]+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   const draftedIds = request.nextUrl.searchParams.get("draftedIds") ?? "";
@@ -40,6 +56,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ players: [] });
   }
 
+  const searchParts = getSearchParts(query);
+  const normalizedQuery = normalizeSearchText(query);
+
+  const broadNameQuery =
+    searchParts.find((part) => part.length >= 3) ??
+    searchParts.find((part) => part.length >= 2) ??
+    query;
+
   const players = await prisma.player.findMany({
     where: {
       id: {
@@ -58,29 +82,44 @@ export async function GET(request: NextRequest) {
           }
         : undefined,
       name:
-  query.length >= 2
-    ? {
-        contains: query,
-        mode: "insensitive",
-      }
-    : undefined,
+        broadNameQuery.length >= 2 && !isBrowsingByPositionAndTeam
+          ? {
+              contains: broadNameQuery,
+              mode: "insensitive",
+            }
+          : undefined,
     },
     orderBy: [
       {
         name: "asc",
       },
     ],
-    take: isBrowsingByPositionAndTeam ? 200 : 50,
+    take: isBrowsingByPositionAndTeam ? 200 : 200,
+  });
+
+  const filteredPlayers = players.filter((player) => {
+    if (!query) {
+      return true;
+    }
+
+    const normalizedName = normalizeSearchText(player.name);
+    const lowerName = player.name.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+
+    return (
+      lowerName.includes(lowerQuery) ||
+      normalizedName.includes(normalizedQuery) ||
+      searchParts.every((part) =>
+        normalizedName.includes(normalizeSearchText(part)),
+      )
+    );
   });
 
   const undraftedUniquePlayers = Array.from(
     new Map(
-      players
+      filteredPlayers
         .filter((player) => !draftedPlayerKeys.has(normalizePlayerKey(player)))
-        .map((player) => [
-          normalizePlayerKey(player),
-          player,
-        ]),
+        .map((player) => [normalizePlayerKey(player), player]),
     ).values(),
   ).slice(0, isBrowsingByPositionAndTeam ? 100 : 12);
 
