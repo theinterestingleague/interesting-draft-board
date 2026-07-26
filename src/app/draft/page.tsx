@@ -53,6 +53,10 @@ const DRAFT_LATEST_BACKUP_KEY = "draftPicksLatestBackup";
 const MAX_DRAFT_BACKUPS = 50;
 const COMMISSIONER_UNLOCK_PASSWORD = "sproles43";
 
+const DRAFT_AUDIO_VOLUME_KEY = "draftAudioVolume";
+const DEFAULT_AUDIO_VOLUME = 1;
+const JINGLE_BASE_VOLUME = 0.8;
+
 function getDraftBackupHistory() {
   if (typeof window === "undefined") {
     return [];
@@ -402,6 +406,14 @@ function getPreferredDefaultVoice(voices: SpeechSynthesisVoice[]) {
   );
 }
 
+function clampAudioVolume(value: number) {
+  if (Number.isNaN(value)) {
+    return DEFAULT_AUDIO_VOLUME;
+  }
+
+  return Math.min(1, Math.max(0, value));
+}
+
 export default function DraftPage() {
   const router = useRouter();
 
@@ -426,7 +438,8 @@ export default function DraftPage() {
     null,
   );
   const [isBoardLocked, setIsBoardLocked] = useState(false);
-  const [isSyncingPicks, setIsSyncingPicks] = useState(false);
+const [audioVolume, setAudioVolume] = useState(DEFAULT_AUDIO_VOLUME);
+const [isSyncingPicks, setIsSyncingPicks] = useState(false);
   const [draftOrderTeamIds, setDraftOrderTeamIds] = useState<string[]>(() =>
     teams.map((team) => team.id),
   );
@@ -437,7 +450,8 @@ export default function DraftPage() {
   const isEditingDraftOrderRef = useRef(false);
   const draftOrderTeamIdsRef = useRef<string[]>(teams.map((team) => team.id));
   const userRef = useRef<DraftUser | null>(null);
-  const [isSavingDraftOrder, setIsSavingDraftOrder] = useState(false);
+const audioVolumeRef = useRef(DEFAULT_AUDIO_VOLUME);
+const [isSavingDraftOrder, setIsSavingDraftOrder] = useState(false);
   const [draggedDraftOrderTeamId, setDraggedDraftOrderTeamId] = useState<
     string | null
   >(null);
@@ -558,6 +572,10 @@ export default function DraftPage() {
     userRef.current = user;
   }, [user]);
 
+useEffect(() => {
+  audioVolumeRef.current = audioVolume;
+}, [audioVolume]);
+
   useEffect(() => {
     if (isCheckingLogin) {
       return;
@@ -612,6 +630,10 @@ export default function DraftPage() {
       window.localStorage.getItem("announcePicks") === "true";
     const savedTheme = window.localStorage.getItem("draftTheme") ?? "dark";
 
+    const savedAudioVolume = Number(
+  window.localStorage.getItem(DRAFT_AUDIO_VOLUME_KEY) ?? DEFAULT_AUDIO_VOLUME,
+);
+
     if (!savedUser) {
       router.push("/");
       return;
@@ -623,8 +645,9 @@ export default function DraftPage() {
     loadSharedPicks();
     setAnnouncePicks(savedAnnouncePicks);
     setIsLightMode(savedTheme === "light");
-    setLatestBackup(getLatestDraftBackup());
-    setIsCheckingLogin(false);
+setAudioVolume(clampAudioVolume(savedAudioVolume));
+setLatestBackup(getLatestDraftBackup());
+setIsCheckingLogin(false);
   }, [router]);
 
   useEffect(() => {
@@ -979,10 +1002,10 @@ export default function DraftPage() {
       .then(() => {
         audio.pause();
         audio.currentTime = 0;
-        audio.volume = 0.8;
+        audio.volume = JINGLE_BASE_VOLUME * audioVolumeRef.current;
       })
       .catch(() => {
-        audio.volume = 0.8;
+        audio.volume = JINGLE_BASE_VOLUME * audioVolumeRef.current;
       });
   }
 
@@ -1009,7 +1032,7 @@ export default function DraftPage() {
     const audio = turnAlertAudioRef.current ?? new Audio("/draft-alert.mp3");
 
     turnAlertAudioRef.current = audio;
-    audio.volume = 0.8;
+    audio.volume = JINGLE_BASE_VOLUME * audioVolumeRef.current;
     audio.currentTime = 0;
 
     audio.play().catch((error) => {
@@ -1079,7 +1102,7 @@ export default function DraftPage() {
 
     utterance.rate = 0.95;
     utterance.pitch = 1;
-    utterance.volume = 1;
+    utterance.volume = audioVolumeRef.current;
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();
@@ -1857,6 +1880,46 @@ export default function DraftPage() {
                 onClick={handleLogout}
                 className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${theme.buttonGhost}`}
               >
+
+<label
+  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition ${
+    isLightMode
+      ? "border-slate-300 text-slate-700"
+      : "border-white/10 text-slate-300"
+  }`}
+>
+  <span>Volume</span>
+
+  <input
+    type="range"
+    min="0"
+    max="100"
+    step="5"
+    value={Math.round(audioVolume * 100)}
+    onChange={(event) => {
+      const nextAudioVolume = clampAudioVolume(
+        Number(event.target.value) / 100,
+      );
+
+      setAudioVolume(nextAudioVolume);
+      window.localStorage.setItem(
+        DRAFT_AUDIO_VOLUME_KEY,
+        String(nextAudioVolume),
+      );
+
+      if (turnAlertAudioRef.current) {
+        turnAlertAudioRef.current.volume =
+          JINGLE_BASE_VOLUME * nextAudioVolume;
+      }
+    }}
+    className="h-1 w-24 accent-yellow-300"
+  />
+
+  <span className="w-9 text-right tabular-nums">
+    {Math.round(audioVolume * 100)}%
+  </span>
+</label>
+
                 Log Out
               </button>
 
