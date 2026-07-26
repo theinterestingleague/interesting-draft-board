@@ -75,6 +75,7 @@ export default function MyTeamPage() {
     useState<string[]>(fallbackTeamIds);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(false);
   const [error, setError] = useState("");
 
   const orderedTeams = useMemo(
@@ -84,6 +85,9 @@ export default function MyTeamPage() {
 
   useEffect(() => {
     const savedUser = window.localStorage.getItem("draftUser");
+    const savedTheme = window.localStorage.getItem("draftTheme") ?? "dark";
+
+    setIsLightMode(savedTheme === "light");
 
     if (!savedUser) {
       router.push("/");
@@ -161,6 +165,53 @@ export default function MyTeamPage() {
     (pick) => pick.teamId === selectedTeamId,
   );
 
+  const theme = {
+    page: isLightMode
+      ? "bg-amber-50 text-slate-950"
+      : "bg-slate-950 text-white",
+    checkingPage: isLightMode
+      ? "bg-amber-50 text-slate-950"
+      : "bg-slate-950 text-white",
+    header: isLightMode
+      ? "border-slate-300 bg-white/90 shadow-xl"
+      : "border-white/10 bg-white/[0.04] shadow-2xl",
+    sidePanel: isLightMode
+      ? "border-slate-300 bg-white/80"
+      : "border-white/10 bg-white/[0.04]",
+    rosterPanel: isLightMode
+      ? "border-slate-300 bg-white shadow-xl"
+      : "border-white/10 bg-slate-900 shadow-2xl",
+    mutedText: isLightMode ? "text-slate-600" : "text-slate-400",
+    faintText: isLightMode ? "text-slate-500" : "text-slate-500",
+    softText: isLightMode ? "text-slate-700" : "text-slate-300",
+    mainText: isLightMode ? "text-slate-950" : "text-white",
+    labelText: isLightMode ? "text-amber-700" : "text-yellow-300",
+    loggedInName: isLightMode ? "text-amber-700" : "text-yellow-200",
+    ghostButton: isLightMode
+      ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+      : "border-white/10 text-slate-300 hover:bg-white/10",
+    selectedTeam: isLightMode
+      ? "border-yellow-400 bg-yellow-100 text-slate-950"
+      : "border-yellow-300/40 bg-yellow-300/10 text-yellow-100",
+    unselectedTeam: isLightMode
+      ? "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+      : "border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]",
+    teamCount: isLightMode ? "text-slate-500" : "text-slate-500",
+    divider: isLightMode ? "border-slate-300" : "border-white/10",
+    emptySlot: isLightMode ? "text-slate-500" : "text-slate-500",
+    slotLabel: isLightMode ? "text-slate-700" : "text-slate-300",
+    playerMeta: isLightMode ? "text-slate-700" : "text-slate-300",
+    playerImageShell: isLightMode
+      ? "border-slate-300 bg-slate-100"
+      : "border-white/10 bg-slate-950/40",
+    positionPill: isLightMode
+      ? "bg-white/70 text-slate-900"
+      : "bg-black/30 text-white",
+    emptySlotCard: isLightMode
+      ? "border-slate-300 bg-slate-50"
+      : getPositionClass(undefined),
+  };
+
   function handleLogout() {
     window.localStorage.removeItem("draftUser");
     router.push("/");
@@ -168,8 +219,10 @@ export default function MyTeamPage() {
 
   if (isCheckingLogin) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
-        <p className="text-sm font-bold text-slate-400">
+      <main
+        className={`flex min-h-screen items-center justify-center ${theme.checkingPage}`}
+      >
+        <p className={`text-sm font-bold ${theme.mutedText}`}>
           Checking draft room access...
         </p>
       </main>
@@ -177,20 +230,24 @@ export default function MyTeamPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-6 text-white">
+    <main className={`min-h-screen px-6 py-6 ${theme.page}`}>
       <section className="mx-auto flex max-w-6xl flex-col gap-6">
-        <header className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl">
+        <header className={`rounded-3xl border p-6 ${theme.header}`}>
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.4em] text-yellow-300">
+              <p
+                className={`text-sm font-semibold uppercase tracking-[0.4em] ${theme.labelText}`}
+              >
                 Season 18
               </p>
 
-              <h1 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">
+              <h1
+                className={`mt-2 text-4xl font-black tracking-tight md:text-5xl ${theme.mainText}`}
+              >
                 My Team
               </h1>
 
-              <p className="mt-2 text-slate-300">
+              <p className={`mt-2 ${theme.softText}`}>
                 View your roster or check any other team.
               </p>
             </div>
@@ -206,7 +263,7 @@ export default function MyTeamPage() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-slate-300 transition hover:bg-white/10"
+                className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${theme.ghostButton}`}
               >
                 Logout
               </button>
@@ -227,17 +284,19 @@ export default function MyTeamPage() {
         )}
 
         <section className="grid gap-4 lg:grid-cols-[260px_1fr]">
-          <aside className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+          <aside className={`rounded-3xl border p-4 ${theme.sidePanel}`}>
             <div>
-              <p className="text-sm font-bold text-slate-400">Logged in as</p>
-              <p className="mt-1 text-xl font-black text-yellow-200">
+              <p className={`text-sm font-bold ${theme.mutedText}`}>
+                Logged in as
+              </p>
+              <p className={`mt-1 text-xl font-black ${theme.loggedInName}`}>
                 {user?.displayName}
                 {user?.isCommissioner ? " · Commissioner" : ""}
               </p>
             </div>
 
             <div className="mt-5">
-              <p className="text-sm font-black text-slate-300">Teams</p>
+              <p className={`text-sm font-black ${theme.softText}`}>Teams</p>
 
               <div className="mt-3 space-y-2">
                 {orderedTeams.map((team) => {
@@ -252,13 +311,11 @@ export default function MyTeamPage() {
                       type="button"
                       onClick={() => setSelectedTeamId(team.id)}
                       className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left text-sm transition ${
-                        isSelected
-                          ? "border-yellow-300/40 bg-yellow-300/10 text-yellow-100"
-                          : "border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
+                        isSelected ? theme.selectedTeam : theme.unselectedTeam
                       }`}
                     >
                       <span className="font-black">{team.displayName}</span>
-                      <span className="text-xs font-bold text-slate-500">
+                      <span className={`text-xs font-bold ${theme.teamCount}`}>
                         {teamPickCount}/15
                       </span>
                     </button>
@@ -268,18 +325,22 @@ export default function MyTeamPage() {
             </div>
           </aside>
 
-          <section className="rounded-3xl border border-white/10 bg-slate-900 p-5 shadow-2xl">
-            <div className="flex flex-col gap-2 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between">
+          <section className={`rounded-3xl border p-5 ${theme.rosterPanel}`}>
+            <div
+              className={`flex flex-col gap-2 border-b pb-5 md:flex-row md:items-end md:justify-between ${theme.divider}`}
+            >
               <div>
-                <p className="text-sm uppercase tracking-[0.25em] text-slate-500">
+                <p
+                  className={`text-sm uppercase tracking-[0.25em] ${theme.faintText}`}
+                >
                   Roster View
                 </p>
-                <h2 className="mt-1 text-3xl font-black">
+                <h2 className={`mt-1 text-3xl font-black ${theme.mainText}`}>
                   {selectedTeam?.displayName ?? "Unknown Team"}
                 </h2>
               </div>
 
-              <p className="text-sm font-bold text-slate-400">
+              <p className={`text-sm font-bold ${theme.mutedText}`}>
                 {selectedTeamPicks.length} of 15 picks made
               </p>
             </div>
@@ -287,16 +348,17 @@ export default function MyTeamPage() {
             <div className="mt-5 grid gap-3">
               {rosterSlots.map((slot) => {
                 const player = slot.player as RosterPlayerWithHeadshot | null;
+                const slotClass = player
+                  ? getPositionClass(player.position)
+                  : theme.emptySlotCard;
 
                 return (
                   <div
                     key={slot.id}
-                    className={`grid grid-cols-[80px_1fr] items-center rounded-2xl border p-3 ${getPositionClass(
-                      player?.position,
-                    )}`}
+                    className={`grid grid-cols-[80px_1fr] items-center rounded-2xl border p-3 ${slotClass}`}
                   >
                     <div>
-                      <p className="text-sm font-black text-slate-300">
+                      <p className={`text-sm font-black ${theme.slotLabel}`}>
                         {slot.label}
                       </p>
                     </div>
@@ -304,14 +366,19 @@ export default function MyTeamPage() {
                     {player ? (
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
+                          <div
+                            className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border ${theme.playerImageShell}`}
+                          >
                             {player.headshot ? (
                               <img
                                 src={player.headshot}
                                 alt={player.name}
                                 className="h-full w-full object-cover"
                                 onError={(event) => {
-                                  event.currentTarget.src = "/player-placeholder.png";
+                                  event.currentTarget.onerror = null;
+                                  event.currentTarget.src =
+                                    "/player-placeholder.png";
+                                  event.currentTarget.alt = "";
                                   event.currentTarget.className =
                                     "h-full w-full object-cover opacity-70";
                                 }}
@@ -326,21 +393,27 @@ export default function MyTeamPage() {
                           </div>
 
                           <div className="min-w-0">
-                            <p className="truncate text-base font-black">
+                            <p
+                              className={`truncate text-base font-black ${theme.mainText}`}
+                            >
                               {player.name}
                             </p>
-                            <p className="text-sm font-semibold text-slate-300">
+                            <p
+                              className={`text-sm font-semibold ${theme.playerMeta}`}
+                            >
                               {player.position} · {player.nflTeam}
                             </p>
                           </div>
                         </div>
 
-                        <span className="rounded-full bg-black/30 px-3 py-1 text-xs font-black">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-black ${theme.positionPill}`}
+                        >
                           {player.position}
                         </span>
                       </div>
                     ) : (
-                      <p className="text-sm font-bold text-slate-500">
+                      <p className={`text-sm font-bold ${theme.emptySlot}`}>
                         Empty {slot.label.toLowerCase()} slot
                       </p>
                     )}
