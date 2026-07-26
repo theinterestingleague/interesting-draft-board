@@ -1888,7 +1888,7 @@ setIsCheckingLogin(false);
       : "border-white/10 text-slate-300"
   }`}
 >
-  <span>Volume</span>
+  <span>Vol.</span>
 
   <input
     type="range"
@@ -1912,10 +1912,10 @@ setIsCheckingLogin(false);
           JINGLE_BASE_VOLUME * nextAudioVolume;
       }
     }}
-    className="h-1 w-24 accent-yellow-300"
+    className="h-1 w-20 accent-white"
   />
 
-  <span className="w-9 text-right tabular-nums">
+  <span className="w-8 text-right tabular-nums">
     {Math.round(audioVolume * 100)}%
   </span>
 </label>
