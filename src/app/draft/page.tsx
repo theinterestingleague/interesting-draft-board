@@ -2374,7 +2374,7 @@ setIsCheckingLogin(false);
         <div className={`overflow-x-auto overflow-y-hidden rounded-2xl border ${theme.board}`}>
   <div className="min-w-[1240px]">
     <div
-      className={`grid grid-cols-[46px_repeat(10,minmax(108px,1fr))_46px] border-b ${theme.boardHeader}`}
+      className={`grid grid-cols-[24px_repeat(10,minmax(108px,1fr))_24px] border-b ${theme.boardHeader}`}
     >
             <div
               className={`px-1 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500`}
@@ -2401,7 +2401,7 @@ setIsCheckingLogin(false);
           {draftBoard.map((roundPicks) => (
             <div
               key={roundPicks[0].round}
-              className={`grid grid-cols-[46px_repeat(10,minmax(108px,1fr))_46px] border-b last:border-b-0 ${theme.boardLine}`}
+              className={`grid grid-cols-[24px_repeat(10,minmax(108px,1fr))_24px] border-b last:border-b-0 ${theme.boardLine}`}
             >
               <div
                 className={`flex items-center justify-center text-sm font-black ${theme.roundCell}`}
@@ -2520,7 +2520,7 @@ setIsCheckingLogin(false);
           ))}
 
           <div
-            className={`grid grid-cols-[46px_repeat(10,minmax(108px,1fr))_46px] border-t ${theme.boardHeader}`}
+            className={`grid grid-cols-[24px_repeat(10,minmax(108px,1fr))_24px] border-t ${theme.boardHeader}`}
           >
             <div
               className={`px-1 py-1.5 text-center text-[10px] font-bold uppercase tracking-widest text-slate-500`}
