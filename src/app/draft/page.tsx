@@ -1875,13 +1875,7 @@ setIsCheckingLogin(false);
                 {announcePicks ? "Announce On" : "Announce Off"}
               </button>
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${theme.buttonGhost}`}
-              >
-
-<label
+              <label
   className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition ${
     isLightMode
       ? "border-slate-300 text-slate-700"
@@ -1920,8 +1914,13 @@ setIsCheckingLogin(false);
   </span>
 </label>
 
-                Log Out
-              </button>
+<button
+  type="button"
+  onClick={handleLogout}
+  className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${theme.buttonGhost}`}
+>
+  Log Out
+</button>
 
               {user?.isCommissioner && (
                 <>
