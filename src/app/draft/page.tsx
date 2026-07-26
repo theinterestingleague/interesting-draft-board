@@ -1914,7 +1914,7 @@ setIsCheckingLogin(false);
           JINGLE_BASE_VOLUME * nextAudioVolume;
       }
     }}
-    className="h-1 w-20 accent-white"
+    className={`h-1 w-20 ${isLightMode ? "accent-slate-900" : "accent-white"}`}
   />
 
   <span className="w-8 text-right tabular-nums">
