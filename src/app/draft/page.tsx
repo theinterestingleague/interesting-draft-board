@@ -2385,7 +2385,7 @@ setIsCheckingLogin(false);
             {draftBoard[0].map((pick) => (
               <div
                 key={pick.teamId}
-                className={`border-l px-1 py-1.5 text-center text-xl leading-none text-white ${isLightMode ? "border-slate-600" : "border-white/10"} ${lobster.className}`}
+                className={`border-l px-1 py-1.5 text-center text-[23px] leading-none text-white ${isLightMode ? "border-slate-600" : "border-white/10"} ${lobster.className}`}
               >
                 {pick.teamDisplayName}
               </div>
@@ -2531,7 +2531,7 @@ setIsCheckingLogin(false);
             {draftBoard[0].map((pick) => (
               <div
                 key={`bottom-${pick.teamId}`}
-                className={`border-l px-1 py-1.5 text-center text-xl leading-none text-white ${isLightMode ? "border-slate-600" : "border-white/10"} ${lobster.className}`}
+                className={`border-l px-1 py-1.5 text-center text-[23px] leading-none text-white ${isLightMode ? "border-slate-600" : "border-white/10"} ${lobster.className}`}
               >
                 {pick.teamDisplayName}
               </div>
