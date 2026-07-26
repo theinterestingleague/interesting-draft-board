@@ -1671,11 +1671,15 @@ setIsCheckingLogin(false);
                     <img
   src={selectedPlayer.headshot || "/player-placeholder.png"}
   alt=""
-  className="h-full w-full object-cover opacity-70"
+  className={`h-full w-full object-cover ${
+    selectedPlayer.headshot ? "" : "opacity-70"
+  }`}
   onError={(event) => {
     event.currentTarget.onerror = null;
     event.currentTarget.src = "/player-placeholder.png";
     event.currentTarget.alt = "";
+    event.currentTarget.className =
+      "h-full w-full object-cover opacity-70";
   }}
 />
 
@@ -1740,11 +1744,15 @@ setIsCheckingLogin(false);
                     <img
   src={recentPickPlayer?.headshot || "/player-placeholder.png"}
   alt=""
-  className="h-full w-full object-cover opacity-70"
+  className={`h-full w-full object-cover ${
+    recentPickPlayer?.headshot ? "" : "opacity-70"
+  }`}
   onError={(event) => {
     event.currentTarget.onerror = null;
     event.currentTarget.src = "/player-placeholder.png";
     event.currentTarget.alt = "";
+    event.currentTarget.className =
+      "h-full w-full object-cover opacity-70";
   }}
 />
 
