@@ -520,6 +520,9 @@ const [isSavingDraftOrder, setIsSavingDraftOrder] = useState(false);
     | DraftedPlayerWithHeadshot
     | undefined;
 
+const isCheungOnClock =
+  currentTeam?.displayName.trim().toLowerCase() === "cheung";
+
   const canEditDraftOrder = Boolean(user?.isCommissioner && picks.length === 0);
 
   function getTeamById(teamId: string) {
@@ -1720,7 +1723,7 @@ setIsCheckingLogin(false);
             </div>
 
             <div
-              className={`flex min-h-[112px] items-center justify-center rounded-2xl border px-5 py-3 transition ${
+              className={`relative flex min-h-[112px] items-center justify-center overflow-hidden rounded-2xl border px-5 py-3 transition ${
                 recentPickGraphic
                   ? isLightMode
                     ? "border-yellow-400 bg-yellow-100 shadow-lg shadow-yellow-300/50"
@@ -1801,43 +1804,55 @@ setIsCheckingLogin(false);
                   </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <div className="flex justify-center">
-                    <p
-                      className={`inline-flex whitespace-nowrap rounded-lg border px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] ${
-                        isUsersActualTurn
-                          ? isLightMode
-                            ? "border-amber-400 bg-amber-200 text-amber-900"
-                            : "border-yellow-300/30 bg-yellow-300/10 text-yellow-200"
-                          : isLightMode
-                            ? "border-slate-300 bg-white text-slate-600"
-                            : "border-white/10 bg-transparent text-slate-400"
-                      }`}
-                    >
-                      On the clock
-                    </p>
-                  </div>
+  <>
+    <div className="relative z-10 text-center">
+      <div className="flex justify-center">
+        <p
+          className={`inline-flex whitespace-nowrap rounded-lg border px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] ${
+            isUsersActualTurn
+              ? isLightMode
+                ? "border-amber-400 bg-amber-200 text-amber-900"
+                : "border-yellow-300/30 bg-yellow-300/10 text-yellow-200"
+              : isLightMode
+                ? "border-slate-300 bg-white text-slate-600"
+                : "border-white/10 bg-transparent text-slate-400"
+          }`}
+        >
+          On the clock
+        </p>
+      </div>
 
-                  <p
-                    className={`mt-1.5 text-4xl font-black ${
-                      isUsersActualTurn
-                        ? isLightMode
-                          ? "text-amber-800"
-                          : "text-yellow-100"
-                        : isLightMode
-                          ? "text-slate-800"
-                          : "text-slate-300"
-                    }`}
-                  >
-                    {currentTeam?.displayName ?? "Draft Complete"}
-                  </p>
+      <p
+        className={`mt-1.5 text-4xl font-black ${
+          isUsersActualTurn
+            ? isLightMode
+              ? "text-amber-800"
+              : "text-yellow-100"
+            : isLightMode
+              ? "text-slate-800"
+              : "text-slate-300"
+        }`}
+      >
+        {currentTeam?.displayName ?? "Draft Complete"}
+      </p>
 
-                  <p className={`text-sm font-bold ${theme.softText}`}>
-                    Pick {formatPickLabel(currentPick)}
-                  </p>
-                </div>
-              )}
-            </div>
+      <p className={`text-sm font-bold ${theme.softText}`}>
+        Pick {formatPickLabel(currentPick)}
+      </p>
+    </div>
+
+    {isCheungOnClock && (
+      <img
+        key={`cheung-duck-${currentPick}`}
+        src="/cheung-duck.png"
+        alt=""
+        aria-hidden="true"
+        className="cheung-duck-river pointer-events-none absolute z-20 h-28 w-28 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+      />
+    )}
+  </>
+)}
+</div>
 
             <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
               <p className={`mr-2 text-xs ${theme.mutedText}`}>
@@ -2573,6 +2588,70 @@ setIsCheckingLogin(false);
   </div>
 </div>
 </section>
+<style jsx>{`
+  @keyframes cheung-duck-river {
+    0% {
+      left: -32%;
+      top: 58%;
+      opacity: 0;
+      transform: translateY(-50%) rotate(-8deg) scale(0.88);
+    }
+
+    6% {
+      opacity: 1;
+    }
+
+    16% {
+      left: -8%;
+      top: 40%;
+      transform: translateY(-50%) rotate(6deg) scale(0.96);
+    }
+
+    31% {
+      left: 18%;
+      top: 59%;
+      transform: translateY(-50%) rotate(-5deg) scale(1);
+    }
+
+    46% {
+      left: 43%;
+      top: 41%;
+      transform: translateY(-50%) rotate(6deg) scale(1.03);
+    }
+
+    61% {
+      left: 68%;
+      top: 58%;
+      transform: translateY(-50%) rotate(-6deg) scale(1);
+    }
+
+    76% {
+      left: 93%;
+      top: 42%;
+      opacity: 1;
+      transform: translateY(-50%) rotate(6deg) scale(0.96);
+    }
+
+    88% {
+      left: 116%;
+      top: 56%;
+      opacity: 0;
+      transform: translateY(-50%) rotate(-7deg) scale(0.9);
+    }
+
+    100% {
+      left: 116%;
+      top: 56%;
+      opacity: 0;
+      transform: translateY(-50%) rotate(-7deg) scale(0.9);
+    }
+  }
+
+  .cheung-duck-river {
+    animation: cheung-duck-river 6.5s linear infinite;
+    will-change: left, top, opacity, transform;
+  }
+`}</style>
     </main>
   );
 }
