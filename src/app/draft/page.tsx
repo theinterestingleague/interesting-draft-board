@@ -2379,8 +2379,23 @@ setIsCheckingLogin(false);
           </div>
         </header>
 
-        <div className={`overflow-x-auto overflow-y-hidden rounded-2xl border ${theme.board}`}>
-  <div className="min-w-[1240px]">
+        <div
+  className={`relative overflow-x-auto overflow-y-hidden rounded-2xl border ${theme.board}`}
+>
+  <div
+    aria-hidden="true"
+    className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden"
+  >
+    <img
+      src="/interesting-league-decal.png"
+      alt=""
+      className={`h-[82%] max-h-[900px] w-auto max-w-[48%] object-contain ${
+        isLightMode ? "opacity-[0.09] invert" : "opacity-[0.18]"
+      }`}
+    />
+  </div>
+
+  <div className="relative z-10 min-w-[1240px]">
     <div
       className={`grid grid-cols-[24px_repeat(10,minmax(108px,1fr))_24px] border-b ${theme.boardHeader}`}
     >
