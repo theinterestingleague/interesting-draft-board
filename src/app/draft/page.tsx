@@ -523,6 +523,9 @@ const [isSavingDraftOrder, setIsSavingDraftOrder] = useState(false);
 const isCheungOnClock =
   currentTeam?.displayName.trim().toLowerCase() === "cheung";
 
+  const isAlexOnClock =
+  currentTeam?.displayName.trim().toLowerCase() === "alex";
+
   const canEditDraftOrder = Boolean(user?.isCommissioner && picks.length === 0);
 
   function getTeamById(teamId: string) {
@@ -1852,6 +1855,27 @@ setIsCheckingLogin(false);
     )}
   </>
 )}
+
+{isAlexOnClock && (
+  <>
+    <img
+      key={`alex-last-place-left-${currentPick}`}
+      src="/alex-last-place.png"
+      alt=""
+      aria-hidden="true"
+      className="alex-last-place-left pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+
+    <img
+      key={`alex-last-place-right-${currentPick}`}
+      src="/alex-last-place.png"
+      alt=""
+      aria-hidden="true"
+      className="alex-last-place-right pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+  </>
+)}
+
 </div>
 
             <div className="flex flex-wrap items-center justify-start gap-2 xl:justify-end">
@@ -2646,6 +2670,146 @@ setIsCheckingLogin(false);
       transform: translateY(-50%) rotate(-7deg) scale(0.9);
     }
   }
+
+  @keyframes alex-last-place-left {
+  0% {
+    left: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(-10deg) scale(0.82);
+  }
+
+  12% {
+    left: 4%;
+    bottom: 4%;
+    opacity: 1;
+    transform: rotate(-8deg) scale(1);
+  }
+
+  24% {
+    left: 4%;
+    bottom: 10%;
+    opacity: 1;
+    transform: rotate(-14deg) scale(1.03);
+  }
+
+  36% {
+    left: 3.5%;
+    bottom: 7%;
+    opacity: 1;
+    transform: rotate(-4deg) scale(1);
+  }
+
+  48% {
+    left: 4.5%;
+    bottom: 11%;
+    opacity: 1;
+    transform: rotate(-12deg) scale(1.03);
+  }
+
+  60% {
+    left: 4%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+
+  72% {
+    left: 4%;
+    bottom: 5%;
+    opacity: 1;
+    transform: rotate(-10deg) scale(0.98);
+  }
+
+  86% {
+    left: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.84);
+  }
+
+  100% {
+    left: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.84);
+  }
+}
+
+@keyframes alex-last-place-right {
+  0% {
+    right: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(10deg) scale(0.82);
+  }
+
+  12% {
+    right: 4%;
+    bottom: 4%;
+    opacity: 1;
+    transform: rotate(8deg) scale(1);
+  }
+
+  24% {
+    right: 4%;
+    bottom: 10%;
+    opacity: 1;
+    transform: rotate(14deg) scale(1.03);
+  }
+
+  36% {
+    right: 3.5%;
+    bottom: 7%;
+    opacity: 1;
+    transform: rotate(4deg) scale(1);
+  }
+
+  48% {
+    right: 4.5%;
+    bottom: 11%;
+    opacity: 1;
+    transform: rotate(12deg) scale(1.03);
+  }
+
+  60% {
+    right: 4%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(6deg) scale(1);
+  }
+
+  72% {
+    right: 4%;
+    bottom: 5%;
+    opacity: 1;
+    transform: rotate(10deg) scale(0.98);
+  }
+
+  86% {
+    right: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.84);
+  }
+
+  100% {
+    right: 4%;
+    bottom: -34%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.84);
+  }
+}
+
+.alex-last-place-left {
+  animation: alex-last-place-left 5.8s ease-in-out infinite;
+  will-change: left, bottom, opacity, transform;
+}
+
+.alex-last-place-right {
+  animation: alex-last-place-right 5.8s ease-in-out infinite;
+  will-change: right, bottom, opacity, transform;
+}
 
   .cheung-duck-river {
     animation: cheung-duck-river 6.5s linear infinite;
