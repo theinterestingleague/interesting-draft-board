@@ -1887,20 +1887,20 @@ setIsCheckingLogin(false);
     />
 
     <img
-      key={`eric-melon-with-ball-${currentPick}`}
-      src="/eric-melon-with-ball.png"
-      alt=""
-      aria-hidden="true"
-      className="eric-melon-with-ball pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
-    />
+  key={`eric-melon-with-ball-${currentPick}`}
+  src="/eric-melon-with-ball.png"
+  alt=""
+  aria-hidden="true"
+  className="eric-melon-with-ball pointer-events-none absolute z-20 h-28 w-28 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+/>
 
-    <img
-      key={`eric-melon-no-ball-${currentPick}`}
-      src="/eric-melon-no-ball.png"
-      alt=""
-      aria-hidden="true"
-      className="eric-melon-no-ball pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
-    />
+<img
+  key={`eric-melon-no-ball-${currentPick}`}
+  src="/eric-melon-no-ball.png"
+  alt=""
+  aria-hidden="true"
+  className="eric-melon-no-ball pointer-events-none absolute z-20 h-28 w-28 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+/>
 
     <img
       key={`eric-football-${currentPick}`}
@@ -2577,19 +2577,19 @@ setIsCheckingLogin(false);
                             </div>
                           </div>
 
-                          <div className={`text-center ${anton.className}`}>
-                            <p
-                              className={`truncate text-[12px] uppercase leading-[1.05] tracking-wide ${theme.tileName}`}
-                            >
-                              {splitName.firstName}
-                            </p>
+                          <div className="text-center font-black">
+  <p
+    className={`truncate text-[12px] uppercase leading-[1.05] tracking-normal ${theme.tileName}`}
+  >
+    {splitName.firstName}
+  </p>
 
-                            <p
-                              className={`truncate text-[20px] uppercase leading-[1.05] tracking-wide ${theme.tileName}`}
-                            >
-                              {splitName.lastName || savedPick.player.name}
-                            </p>
-                          </div>
+  <p
+    className={`truncate text-[20px] uppercase leading-[1.05] tracking-normal ${theme.tileName}`}
+  >
+    {splitName.lastName || savedPick.player.name}
+  </p>
+</div>
 
                           {savedPick.note && (
                             <p className="mt-1 truncate text-[9px] font-bold leading-none text-blue-200">
@@ -3043,7 +3043,7 @@ setIsCheckingLogin(false);
     transform: rotate(8deg) scale(0.88);
   }
 
-  38% {
+  43.5% {
     right: 3%;
     bottom: 6%;
     opacity: 0;
@@ -3054,7 +3054,7 @@ setIsCheckingLogin(false);
     right: 3%;
     bottom: 6%;
     opacity: 1;
-    transform: rotate(2deg) scale(1);
+    transform: rotate(4deg) scale(1);
   }
 
   52% {
@@ -3122,32 +3122,53 @@ setIsCheckingLogin(false);
     transform: rotate(14deg) scale(0.74);
   }
 
+  47% {
+    left: 63%;
+    bottom: 58%;
+    opacity: 1;
+    transform: rotate(9deg) scale(0.75);
+  }
+
   50% {
-    left: 59%;
+    left: 57%;
     bottom: 66%;
     opacity: 1;
-    transform: rotate(5deg) scale(0.76);
+    transform: rotate(4deg) scale(0.76);
+  }
+
+  53% {
+    left: 50%;
+    bottom: 71%;
+    opacity: 1;
+    transform: rotate(-3deg) scale(0.77);
   }
 
   56% {
-    left: 48%;
+    left: 43%;
     bottom: 73%;
     opacity: 1;
-    transform: rotate(-6deg) scale(0.78);
+    transform: rotate(-9deg) scale(0.78);
+  }
+
+  59% {
+    left: 36%;
+    bottom: 72%;
+    opacity: 1;
+    transform: rotate(-15deg) scale(0.79);
   }
 
   62% {
-    left: 35%;
-    bottom: 70%;
+    left: 30%;
+    bottom: 68%;
     opacity: 1;
-    transform: rotate(-16deg) scale(0.8);
+    transform: rotate(-21deg) scale(0.8);
   }
 
-  67% {
-    left: 23%;
-    bottom: 62%;
+  65% {
+    left: 24%;
+    bottom: 63%;
     opacity: 1;
-    transform: rotate(-25deg) scale(0.82);
+    transform: rotate(-26deg) scale(0.81);
   }
 
   68.5% {
@@ -3193,7 +3214,7 @@ setIsCheckingLogin(false);
 }
 
 .eric-football-pass {
-  animation: eric-football-pass 7s ease-in-out infinite;
+  animation: eric-football-pass 7s linear infinite;
   will-change: left, bottom, opacity, transform;
 }
 
