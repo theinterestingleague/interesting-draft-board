@@ -3013,7 +3013,14 @@ setIsCheckingLogin(false);
     transform: rotate(9deg) scale(1.02);
   }
 
-  40% {
+  43.5% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(4deg) scale(1);
+  }
+
+  44% {
     right: 3%;
     bottom: 6%;
     opacity: 0;
