@@ -14,6 +14,7 @@ import {
   getPickByNumber,
 } from "@/lib/picks";
 import { validatePickAgainstRosterRules } from "@/lib/roster-rules";
+import { searchPlayers } from "@/lib/player-search";
 import { getPositionClass } from "@/lib/styles";
 
 type PlayerSearchResult = DraftedPlayer & {
@@ -45,6 +46,11 @@ type DraftOrderApiResponse = {
 
 type DraftStateApiResponse = {
   isLocked?: boolean;
+  message?: string;
+};
+
+type PlayersApiResponse = {
+  players?: PlayerSearchResult[];
   message?: string;
 };
 
@@ -423,6 +429,7 @@ export default function DraftPage() {
   const [query, setQuery] = useState("");
   const [positionFilter, setPositionFilter] = useState("");
   const [nflTeamFilter, setNflTeamFilter] = useState("");
+  const [allPlayers, setAllPlayers] = useState<PlayerSearchResult[]>([]);
   const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedPlayer, setSelectedPlayer] =
@@ -487,22 +494,20 @@ const [isSavingDraftOrder, setIsSavingDraftOrder] = useState(false);
       ? getPickByNumber(picks, editingPickNumber)
       : undefined;
 
-  const draftedPlayerIds = useMemo(
-    () => picks.map((pick) => pick.player.id),
+  const draftedPlayers = useMemo(
+    () => picks.map((pick) => pick.player as PlayerSearchResult),
     [picks],
   );
 
-  const draftedPlayerIdsForReplacement = useMemo(() => {
+  const draftedPlayersForReplacement = useMemo(() => {
     if (!editingPick) {
-      return draftedPlayerIds;
+      return draftedPlayers;
     }
 
-    return draftedPlayerIds.filter((id) => id !== editingPick.player.id);
-  }, [draftedPlayerIds, editingPick]);
-
-  const draftedPlayerIdsKey = draftedPlayerIds.join(",");
-  const draftedPlayerIdsForReplacementKey =
-    draftedPlayerIdsForReplacement.join(",");
+    return picks
+      .filter((pick) => pick.pickNumber !== editingPick.pickNumber)
+      .map((pick) => pick.player as PlayerSearchResult);
+  }, [draftedPlayers, editingPick, picks]);
 
   const canMakeCurrentPick =
     user &&
@@ -525,6 +530,9 @@ const isCheungOnClock =
 
   const isAlexOnClock =
   currentTeam?.displayName.trim().toLowerCase() === "alex";
+
+  const isEricOnClock =
+  currentTeam?.displayName.trim().toLowerCase() === "eric";
 
   const canEditDraftOrder = Boolean(user?.isCommissioner && picks.length === 0);
 
@@ -590,8 +598,6 @@ useEffect(() => {
     const previousPickCount = previousPickCountRef.current;
 
     if (!hasLoadedPicksRef.current) {
-      hasLoadedPicksRef.current = true;
-      previousPickCountRef.current = picks.length;
       return;
     }
 
@@ -649,6 +655,7 @@ useEffect(() => {
     loadDraftOrder();
     loadDraftState();
     loadSharedPicks();
+    loadPlayers();
     setAnnouncePicks(savedAnnouncePicks);
     setIsLightMode(savedTheme === "light");
 setAudioVolume(clampAudioVolume(savedAudioVolume));
@@ -661,17 +668,49 @@ setIsCheckingLogin(false);
       return;
     }
 
-    const intervalId = window.setInterval(() => {
+    function syncPicksIfVisible() {
+      if (document.visibilityState === "visible") {
+        loadSharedPicks({ quiet: true });
+      }
+    }
+
+    function syncSlowStateIfVisible() {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      loadDraftState({ quiet: true });
+
+      if (picks.length === 0 && !isEditingDraftOrderRef.current) {
+        loadDraftOrder({ quiet: true });
+      }
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
       loadSharedPicks({ quiet: true });
       loadDraftState({ quiet: true });
 
       if (picks.length === 0 && !isEditingDraftOrderRef.current) {
         loadDraftOrder({ quiet: true });
       }
-    }, 2000);
+    }
+
+    const picksIntervalId = window.setInterval(syncPicksIfVisible, 2000);
+    const slowStateIntervalId = window.setInterval(
+      syncSlowStateIfVisible,
+      30000,
+    );
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      window.clearInterval(picksIntervalId);
+      window.clearInterval(slowStateIntervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isCheckingLogin, user, picks.length]);
 
@@ -708,135 +747,55 @@ setIsCheckingLogin(false);
   }, []);
 
   useEffect(() => {
-    const trimmedQuery = query.trim();
-    const canBrowseFilteredPlayers = Boolean(positionFilter && nflTeamFilter);
-
-    if (
-      (trimmedQuery.length < 2 && !canBrowseFilteredPlayers) ||
-      selectedPlayer
-    ) {
+    if (selectedPlayer) {
       setSearchResults([]);
       setIsSearching(false);
       return;
     }
 
-    const controller = new AbortController();
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setIsSearching(true);
-
-        const params = new URLSearchParams({
-          q: trimmedQuery,
-          draftedIds: draftedPlayerIdsKey,
-        });
-
-        if (positionFilter) {
-          params.set("position", positionFilter);
-        }
-
-        if (nflTeamFilter) {
-          params.set("nflTeam", nflTeamFilter);
-        }
-
-        const response = await fetch(`/api/players/search?${params}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("Player search failed.");
-        }
-
-        const data = await response.json();
-        setSearchResults(data.players ?? []);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error(error);
-          setSearchResults([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsSearching(false);
-        }
-      }
-    }, 200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
+    setSearchResults(
+      searchPlayers({
+        players: allPlayers,
+        query,
+        position: positionFilter,
+        nflTeam: nflTeamFilter,
+        excludedPlayers: draftedPlayers,
+      }),
+    );
+    setIsSearching(false);
   }, [
+    allPlayers,
+    draftedPlayers,
+    nflTeamFilter,
+    positionFilter,
     query,
     selectedPlayer,
-    draftedPlayerIdsKey,
-    positionFilter,
-    nflTeamFilter,
   ]);
 
   useEffect(() => {
-    const trimmedQuery = replacementQuery.trim();
-    const canBrowseFilteredPlayers = Boolean(positionFilter && nflTeamFilter);
-
-    if (
-      (trimmedQuery.length < 2 && !canBrowseFilteredPlayers) ||
-      replacementPlayer
-    ) {
+    if (replacementPlayer) {
       setReplacementResults([]);
       setIsSearchingReplacement(false);
       return;
     }
 
-    const controller = new AbortController();
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setIsSearchingReplacement(true);
-
-        const params = new URLSearchParams({
-          q: trimmedQuery,
-          draftedIds: draftedPlayerIdsForReplacementKey,
-        });
-
-        if (positionFilter) {
-          params.set("position", positionFilter);
-        }
-
-        if (nflTeamFilter) {
-          params.set("nflTeam", nflTeamFilter);
-        }
-
-        const response = await fetch(`/api/players/search?${params}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error("Replacement player search failed.");
-        }
-
-        const data = await response.json();
-        setReplacementResults(data.players ?? []);
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.error(error);
-          setReplacementResults([]);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsSearchingReplacement(false);
-        }
-      }
-    }, 200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      controller.abort();
-    };
+    setReplacementResults(
+      searchPlayers({
+        players: allPlayers,
+        query: replacementQuery,
+        position: positionFilter,
+        nflTeam: nflTeamFilter,
+        excludedPlayers: draftedPlayersForReplacement,
+      }),
+    );
+    setIsSearchingReplacement(false);
   }, [
-    replacementQuery,
-    replacementPlayer,
-    draftedPlayerIdsForReplacementKey,
-    positionFilter,
+    allPlayers,
+    draftedPlayersForReplacement,
     nflTeamFilter,
+    positionFilter,
+    replacementPlayer,
+    replacementQuery,
   ]);
 
   async function readDraftPicksResponse(response: Response) {
@@ -873,6 +832,37 @@ setIsCheckingLogin(false);
     }
 
     return data;
+  }
+
+  async function readPlayersResponse(response: Response) {
+    const data = (await response
+      .json()
+      .catch(() => ({}))) as PlayersApiResponse;
+
+    if (!response.ok) {
+      throw new Error(data.message ?? "Player list failed to load.");
+    }
+
+    return data;
+  }
+
+  async function loadPlayers() {
+    try {
+      setIsSearching(true);
+      const response = await fetch("/api/players");
+      const data = await readPlayersResponse(response);
+
+      setAllPlayers(data.players ?? []);
+    } catch (error) {
+      console.error(error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not load the player list.",
+      );
+    } finally {
+      setIsSearching(false);
+    }
   }
 
   async function loadDraftState({ quiet = false } = {}) {
@@ -933,6 +923,11 @@ setIsCheckingLogin(false);
       });
       const data = await readDraftPicksResponse(response);
       const loadedPicks = data.picks ?? [];
+
+      if (!hasLoadedPicksRef.current) {
+        previousPickCountRef.current = loadedPicks.length;
+        hasLoadedPicksRef.current = true;
+      }
 
       setPicks((previousPicks) => {
         const previousCurrentPick = getCurrentPickNumber(previousPicks);
@@ -1853,26 +1848,70 @@ setIsCheckingLogin(false);
         className="cheung-duck-river pointer-events-none absolute z-20 h-28 w-28 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
       />
     )}
+
+    {isAlexOnClock && (
+      <>
+        <img
+          key={`alex-last-place-left-${currentPick}`}
+          src="/alex-last-place.png"
+          alt=""
+          aria-hidden="true"
+          className="alex-last-place-left pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+        />
+
+        <img
+          key={`alex-last-place-right-${currentPick}`}
+          src="/alex-last-place.png"
+          alt=""
+          aria-hidden="true"
+          className="alex-last-place-right pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+        />
+      </>
+    )}
+    {isEricOnClock && (
+  <>
+    <img
+      key={`eric-kanga-ready-${currentPick}`}
+      src="/eric-kanga-ready.png"
+      alt=""
+      aria-hidden="true"
+      className="eric-kanga-ready pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+
+    <img
+      key={`eric-kanga-catch-${currentPick}`}
+      src="/eric-kanga-catch.png"
+      alt=""
+      aria-hidden="true"
+      className="eric-kanga-catch pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+
+    <img
+      key={`eric-melon-with-ball-${currentPick}`}
+      src="/eric-melon-with-ball.png"
+      alt=""
+      aria-hidden="true"
+      className="eric-melon-with-ball pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+
+    <img
+      key={`eric-melon-no-ball-${currentPick}`}
+      src="/eric-melon-no-ball.png"
+      alt=""
+      aria-hidden="true"
+      className="eric-melon-no-ball pointer-events-none absolute z-20 h-24 w-24 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
+    />
+
+    <img
+      key={`eric-football-${currentPick}`}
+      src="/eric-football.png"
+      alt=""
+      aria-hidden="true"
+      className="eric-football-pass pointer-events-none absolute z-30 h-10 w-10 object-contain drop-shadow-[0_4px_6px_rgba(0,0,0,0.32)]"
+    />
   </>
 )}
 
-{isAlexOnClock && (
-  <>
-    <img
-      key={`alex-last-place-left-${currentPick}`}
-      src="/alex-last-place.png"
-      alt=""
-      aria-hidden="true"
-      className="alex-last-place-left pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
-    />
-
-    <img
-      key={`alex-last-place-right-${currentPick}`}
-      src="/alex-last-place.png"
-      alt=""
-      aria-hidden="true"
-      className="alex-last-place-right pointer-events-none absolute z-20 h-20 w-20 object-contain drop-shadow-[0_6px_8px_rgba(0,0,0,0.28)]"
-    />
   </>
 )}
 
@@ -2815,6 +2854,314 @@ setIsCheckingLogin(false);
     animation: cheung-duck-river 6.5s linear infinite;
     will-change: left, top, opacity, transform;
   }
+@keyframes eric-kanga-ready {
+  0% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+
+  12% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+
+  22% {
+    left: 3%;
+    bottom: 2%;
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+
+  30% {
+    left: 3.5%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(-10deg) scale(1.02);
+  }
+
+  38% {
+    left: 3%;
+    bottom: 5%;
+    opacity: 1;
+    transform: rotate(-4deg) scale(1);
+  }
+
+  46% {
+    left: 3.5%;
+    bottom: 8%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.01);
+  }
+
+  100% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+}
+
+@keyframes eric-kanga-catch {
+  0% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+
+  45% {
+    left: 3%;
+    bottom: 5%;
+    opacity: 0;
+    transform: rotate(-5deg) scale(1);
+  }
+
+  52% {
+    left: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(-10deg) scale(1.02);
+  }
+
+  60% {
+    left: 3.5%;
+    bottom: 9%;
+    opacity: 1;
+    transform: rotate(-6deg) scale(1.04);
+  }
+
+  68% {
+    left: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(-11deg) scale(1.02);
+  }
+
+  78% {
+    left: 3.5%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+
+  90% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+
+  100% {
+    left: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(-8deg) scale(0.88);
+  }
+}
+
+@keyframes eric-melon-with-ball {
+  0% {
+    right: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.88);
+  }
+
+  10% {
+    right: 3%;
+    bottom: 2%;
+    opacity: 1;
+    transform: rotate(6deg) scale(1);
+  }
+
+  18% {
+    right: 3.5%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(10deg) scale(1.02);
+  }
+
+  26% {
+    right: 3%;
+    bottom: 5%;
+    opacity: 1;
+    transform: rotate(5deg) scale(1);
+  }
+
+  34% {
+    right: 3.5%;
+    bottom: 8%;
+    opacity: 1;
+    transform: rotate(9deg) scale(1.02);
+  }
+
+  40% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 0;
+    transform: rotate(4deg) scale(1);
+  }
+
+  100% {
+    right: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.88);
+  }
+}
+
+@keyframes eric-melon-no-ball {
+  0% {
+    right: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.88);
+  }
+
+  38% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 0;
+    transform: rotate(4deg) scale(1);
+  }
+
+  44% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(2deg) scale(1);
+  }
+
+  52% {
+    right: 3.5%;
+    bottom: 9%;
+    opacity: 1;
+    transform: rotate(7deg) scale(1.02);
+  }
+
+  60% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(1deg) scale(1);
+  }
+
+  68% {
+    right: 3.5%;
+    bottom: 9%;
+    opacity: 1;
+    transform: rotate(6deg) scale(1.02);
+  }
+
+  78% {
+    right: 3%;
+    bottom: 6%;
+    opacity: 1;
+    transform: rotate(2deg) scale(1);
+  }
+
+  90% {
+    right: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.88);
+  }
+
+  100% {
+    right: 3%;
+    bottom: -42%;
+    opacity: 0;
+    transform: rotate(8deg) scale(0.88);
+  }
+}
+
+@keyframes eric-football-pass {
+  0% {
+    left: 70%;
+    bottom: 40%;
+    opacity: 0;
+    transform: rotate(18deg) scale(0.72);
+  }
+
+  40% {
+    left: 70%;
+    bottom: 40%;
+    opacity: 0;
+    transform: rotate(18deg) scale(0.72);
+  }
+
+  45% {
+    left: 68%;
+    bottom: 48%;
+    opacity: 1;
+    transform: rotate(14deg) scale(0.74);
+  }
+
+  52% {
+    left: 57%;
+    bottom: 66%;
+    opacity: 1;
+    transform: rotate(4deg) scale(0.76);
+  }
+
+  59% {
+    left: 44%;
+    bottom: 62%;
+    opacity: 1;
+    transform: rotate(-10deg) scale(0.78);
+  }
+
+  66% {
+    left: 30%;
+    bottom: 49%;
+    opacity: 1;
+    transform: rotate(-20deg) scale(0.8);
+  }
+
+  70% {
+    left: 24%;
+    bottom: 43%;
+    opacity: 0;
+    transform: rotate(-24deg) scale(0.82);
+  }
+
+  100% {
+    left: 24%;
+    bottom: 43%;
+    opacity: 0;
+    transform: rotate(-24deg) scale(0.82);
+  }
+}
+
+.eric-kanga-ready {
+  animation: eric-kanga-ready 7s ease-in-out infinite;
+  will-change: left, bottom, opacity, transform;
+}
+
+.eric-kanga-catch {
+  animation: eric-kanga-catch 7s ease-in-out infinite;
+  will-change: left, bottom, opacity, transform;
+}
+
+.eric-melon-with-ball {
+  animation: eric-melon-with-ball 7s ease-in-out infinite;
+  will-change: right, bottom, opacity, transform;
+}
+
+.eric-melon-no-ball {
+  animation: eric-melon-no-ball 7s ease-in-out infinite;
+  will-change: right, bottom, opacity, transform;
+}
+
+.eric-football-pass {
+  animation: eric-football-pass 7s ease-in-out infinite;
+  will-change: left, bottom, opacity, transform;
+}
+
 `}</style>
     </main>
   );
